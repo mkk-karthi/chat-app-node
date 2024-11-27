@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chat app using Socket IO and Node JS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+    <div id="chat-container" class="bg-white">
+        <div id="header" class="p-4 border-b bg-blue-500 text-white justify-between items-center shadow-md">
+            <p class="text-lg font-semibold">Chat app</p>
+        </div>
+        <div id="chatbox" class="p-4 overflow-y-auto">
+        </div>
+        <div class="fixed bottom-0 w-full">
+            <div id="footer" class="p-4 border-t flex">
+                <input id="user-input" type="text" placeholder="Type a message"
+                    class="w-full px-3 py-2 border rounded-l-md focus:outline-none">
+                <button id="send-button"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600 transition duration-300">Send</button>
+            </div>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const chatbox = document.getElementById("chatbox");
+        const userInput = document.getElementById("user-input");
+        const sendButton = document.getElementById("send-button");
+
+        const header = document.getElementById("header");
+        const footer = document.getElementById("footer");
+        chatbox.style.height = `calc(100vh - ${header.offsetHeight + footer.offsetHeight}px)`;
+
+        let socket = io();
+
+        // Add an event listener to the send button
+        sendButton.addEventListener("click", function () {
+            sendMessage();
+        });
+
+        userInput.addEventListener("keyup", function (event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const userMessage = userInput.value;
+            if (userMessage.trim() !== "") {
+                const sendData = {
+                    to: "karthi",
+                    text: userMessage,
+                    createdAt: Date.now()
+                };
+
+                chatbox.innerHTML += `<div class="mb-2"><div class="flex items-center justify-start flex-row-reverse"><div class="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-500 flex-shrink-0">${sendData.to[0].toUpperCase()}</div><div class="relative mr-3"><p class="bg-gray-200 text-gray-700 rounded-lg py-2 px-4">${sendData.text}</p><div class="text-xs text-right text-gray-500 text-nowrap">${new Date(sendData.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</div></div></div></div>`;
+
+                socket.emit('send', sendData);
+                userInput.value = "";
+            }
+        }
+
+        socket.on("newMessage", (data) => {
+
+            chatbox.innerHTML += `<div class="mb-2"><div class="flex items-center justify-start"><div class="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-500 flex-shrink-0">${data.to[0].toUpperCase()}</div><div class="relative ml-3"><p class="bg-gray-200 text-gray-700 rounded-lg py-2 px-4">${data.text}</p><div class="text-xs text-right text-gray-500 text-nowrap">${new Date(data.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</div></div></div></div>`;
+
+            chatbox.scrollTop = chatbox.scrollHeight;
+        });
+
+    </script>
+</body>
+
+</html>
